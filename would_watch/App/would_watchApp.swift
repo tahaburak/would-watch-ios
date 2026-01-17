@@ -21,39 +21,41 @@ struct would_watchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isAuthenticated {
-                MainTabView()
-                    .environmentObject(authViewModel)
-                    .environmentObject(deepLinkHandler)
-                    .sheet(isPresented: $deepLinkHandler.showRoomLobby) {
-                        if let roomId = deepLinkHandler.roomId {
-                            NavigationView {
-                                RealtimeLobbyView(roomId: roomId)
+            Group {
+                if authViewModel.isAuthenticated {
+                    MainTabView()
+                        .environmentObject(authViewModel)
+                        .environmentObject(deepLinkHandler)
+                        .sheet(isPresented: $deepLinkHandler.showRoomLobby) {
+                            if let roomId = deepLinkHandler.roomId {
+                                NavigationView {
+                                    RealtimeLobbyView(roomId: roomId)
+                                }
                             }
                         }
-                    }
-                    .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
-                        if isAuthenticated {
-                            deepLinkHandler.handlePendingDeepLink(isAuthenticated: true)
-                            // Request push notification permission after login
-                            Task {
-                                await pushNotificationService.requestAuthorization()
+                        .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
+                            if isAuthenticated {
+                                deepLinkHandler.handlePendingDeepLink(isAuthenticated: true)
+                                // Request push notification permission after login
+                                Task {
+                                    await pushNotificationService.requestAuthorization()
+                                }
                             }
                         }
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didRegisterForRemoteNotificationsWithDeviceTokenNotification)) { notification in
-                        if let token = notification.object as? Data {
-                            pushNotificationService.handleDeviceToken(token)
+                        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didRegisterForRemoteNotificationsWithDeviceTokenNotification)) { notification in
+                            if let token = notification.object as? Data {
+                                pushNotificationService.handleDeviceToken(token)
+                            }
                         }
-                    }
-            } else {
-                LoginView()
-                    .environmentObject(authViewModel)
-                    .environmentObject(deepLinkHandler)
+                } else {
+                    LoginView()
+                        .environmentObject(authViewModel)
+                        .environmentObject(deepLinkHandler)
+                }
             }
-        }
-        .onOpenURL { url in
-            deepLinkHandler.handle(url, isAuthenticated: authViewModel.isAuthenticated)
+            .onOpenURL { url in
+                deepLinkHandler.handle(url, isAuthenticated: authViewModel.isAuthenticated)
+            }
         }
     }
 }
