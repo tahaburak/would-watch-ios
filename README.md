@@ -7,9 +7,9 @@ SwiftUI application for Would Watch - A movie recommendation and group watch app
 - 👥 Social Features (Friends & Search)
 - 👤 User Profile & Privacy Settings
 - 🏠 Room Creation & Management
-- 🎬 Movie Recommendations (upcoming)
-- 🗳️ Group Voting Sessions (upcoming)
-- 🎯 Real-time Match Updates (upcoming)
+- 🎬 Movie Search & Display
+- 🗳️ Swipe-based Voting on Movies
+- 🎯 Match Display with Voter Info
 
 ## Tech Stack
 - **Language**: Swift 5+
@@ -27,8 +27,8 @@ would_watch/
 │   ├── Auth/              # Authentication
 │   ├── Social/            # Friends & search
 │   ├── Profile/           # User profile & settings
-│   ├── Room/              # Room creation & management
-│   ├── Vote/              # Voting feature (upcoming)
+│   ├── Room/              # Room lobby, voting & matches
+│   ├── Movie/             # Movie search & display
 │   └── Dashboard/         # Main tab navigation
 └── Core/                   # Core functionality
     ├── Network/           # API client & services
@@ -63,6 +63,16 @@ static let backendBaseURL = "https://your-api-url.com/api"
 - Room creation with friend picker
 - Rooms list view with status indicators
 - Main tab navigation (Rooms/Friends/Profile)
+
+✅ **Sprint 3 Completed (Voting & Room Interaction):**
+- Movie search with TMDB integration
+- Movie grid display with AsyncImage posters
+- Room lobby with participants display
+- Swipe-based voting interface (Tinder-style)
+- Yes/No voting with drag gestures
+- Match animations when votes align
+- Matches view with voter information
+- TMDB links and share functionality
 
 ## Requirements
 - iOS 17.0+
