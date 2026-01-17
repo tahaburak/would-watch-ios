@@ -74,6 +74,18 @@ static let backendBaseURL = "https://your-api-url.com/api"
 - Matches view with voter information
 - TMDB links and share functionality
 
+✅ **Sprint 4 Completed (Realtime & Connectivity):**
+- Supabase Realtime service with Combine publishers
+- Live participant updates in lobby
+- Join/leave animations with notifications
+- Match found notifications with overlays
+- Deep linking with URL scheme (wouldwatch://)
+- Universal Links support (https://wouldwatch.app)
+- Pending deep link storage for post-auth navigation
+- Push notifications with APNs integration
+- Device token registration and handling
+- Notification-to-deep-link flow
+
 ## Requirements
 - iOS 17.0+
 - Xcode 15.0+
