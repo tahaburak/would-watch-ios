@@ -22,7 +22,6 @@ struct NotificationPayload {
     let body: String
 }
 
-@MainActor
 final class PushNotificationService: NSObject, ObservableObject {
     static let shared = PushNotificationService()
 
@@ -33,6 +32,7 @@ final class PushNotificationService: NSObject, ObservableObject {
         super.init()
     }
 
+    @MainActor
     func requestAuthorization() async -> Bool {
         do {
             let center = UNUserNotificationCenter.current()
@@ -54,6 +54,7 @@ final class PushNotificationService: NSObject, ObservableObject {
         await UIApplication.shared.registerForRemoteNotifications()
     }
 
+    @MainActor
     func handleDeviceToken(_ token: Data) {
         let tokenString = token.map { String(format: "%02.2hhx", $0) }.joined()
         deviceToken = tokenString

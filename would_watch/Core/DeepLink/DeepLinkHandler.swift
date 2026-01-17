@@ -56,12 +56,12 @@ enum DeepLink: Equatable {
     }
 }
 
-@MainActor
 class DeepLinkHandler: ObservableObject {
     @Published var activeDeepLink: DeepLink = .none
     @Published var showRoomLobby: Bool = false
     @Published var roomId: String?
 
+    @MainActor
     func handle(_ url: URL, isAuthenticated: Bool) {
         let deepLink = DeepLink.parse(from: url)
 
@@ -85,6 +85,7 @@ class DeepLinkHandler: ObservableObject {
         }
     }
 
+    @MainActor
     func handlePendingDeepLink(isAuthenticated: Bool) {
         guard isAuthenticated, activeDeepLink != .none else { return }
 

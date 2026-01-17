@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-@MainActor
 final class AuthViewModel: ObservableObject {
     @Published var email: String = ""
     @Published var password: String = ""
@@ -23,6 +22,7 @@ final class AuthViewModel: ObservableObject {
         self.authService = authService
     }
 
+    @MainActor
     func login() async {
         guard validateInputs() else { return }
 
@@ -40,6 +40,7 @@ final class AuthViewModel: ObservableObject {
         isLoading = false
     }
 
+    @MainActor
     func signUp() async {
         guard validateInputs() else { return }
 
@@ -57,6 +58,7 @@ final class AuthViewModel: ObservableObject {
         isLoading = false
     }
 
+    @MainActor
     func logout() async {
         isLoading = true
 
