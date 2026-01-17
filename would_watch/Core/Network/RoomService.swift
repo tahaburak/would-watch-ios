@@ -11,6 +11,9 @@ protocol RoomServiceProtocol {
     func getRooms() async throws -> [Room]
     func createRoom(name: String, participants: [String]) async throws -> Room
     func joinRoom(roomId: String) async throws -> Room
+    func getRoom(roomId: String) async throws -> Room
+    func submitVote(roomId: String, mediaId: Int, vote: VoteType) async throws -> VoteResponse
+    func getMatches(roomId: String) async throws -> [RoomMatch]
 }
 
 final class RoomService: RoomServiceProtocol {
@@ -36,6 +39,23 @@ final class RoomService: RoomServiceProtocol {
 
     func joinRoom(roomId: String) async throws -> Room {
         return try await apiClient.post(endpoint: "/rooms/\(roomId)/join", body: EmptyBody())
+    }
+
+    func getRoom(roomId: String) async throws -> Room {
+        return try await apiClient.get(endpoint: "/rooms/\(roomId)")
+    }
+
+    func submitVote(roomId: String, mediaId: Int, vote: VoteType) async throws -> VoteResponse {
+        let request = VoteRequest(mediaId: mediaId, vote: vote)
+        return try await apiClient.post(endpoint: "/rooms/\(roomId)/vote", body: request)
+    }
+
+    func getMatches(roomId: String) async throws -> [RoomMatch] {
+        struct Response: Codable {
+            let matches: [RoomMatch]
+        }
+        let response: Response = try await apiClient.get(endpoint: "/rooms/\(roomId)/matches")
+        return response.matches
     }
 }
 
