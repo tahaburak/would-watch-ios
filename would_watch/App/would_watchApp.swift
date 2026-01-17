@@ -42,11 +42,6 @@ struct would_watchApp: App {
                                 }
                             }
                         }
-                        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didRegisterForRemoteNotificationsWithDeviceTokenNotification)) { notification in
-                            if let token = notification.object as? Data {
-                                pushNotificationService.handleDeviceToken(token)
-                            }
-                        }
                 } else {
                     LoginView()
                         .environmentObject(authViewModel)
