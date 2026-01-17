@@ -4,9 +4,12 @@ SwiftUI application for Would Watch - A movie recommendation and group watch app
 
 ## Features
 - 🔐 User Authentication (Login/Signup)
-- 🎬 Movie Recommendations
-- 👥 Group Voting Sessions
-- 🎯 Real-time Match Updates
+- 👥 Social Features (Friends & Search)
+- 👤 User Profile & Privacy Settings
+- 🏠 Room Creation & Management
+- 🎬 Movie Recommendations (upcoming)
+- 🗳️ Group Voting Sessions (upcoming)
+- 🎯 Real-time Match Updates (upcoming)
 
 ## Tech Stack
 - **Language**: Swift 5+
@@ -22,8 +25,11 @@ would_watch/
 ├── App/                    # App entry point
 ├── Features/               # Feature modules
 │   ├── Auth/              # Authentication
+│   ├── Social/            # Friends & search
+│   ├── Profile/           # User profile & settings
+│   ├── Room/              # Room creation & management
 │   ├── Vote/              # Voting feature (upcoming)
-│   └── Dashboard/         # Dashboard (upcoming)
+│   └── Dashboard/         # Main tab navigation
 └── Core/                   # Core functionality
     ├── Network/           # API client & services
     ├── Models/            # Data models
@@ -43,10 +49,20 @@ static let backendBaseURL = "https://your-api-url.com/api"
 ```
 
 ## Development Status
-✅ Sprint 1 Completed:
+
+✅ **Sprint 1 Completed:**
 - Project structure with MVVM architecture
 - Network layer with APIClient
 - Authentication views and flows
+
+✅ **Sprint 2 Completed (Social Native):**
+- Friends list with follow/unfollow functionality
+- User search with debounced API calls
+- Profile view with avatar and stats
+- Privacy settings (Everyone/Friends/Private)
+- Room creation with friend picker
+- Rooms list view with status indicators
+- Main tab navigation (Rooms/Friends/Profile)
 
 ## Requirements
 - iOS 17.0+
