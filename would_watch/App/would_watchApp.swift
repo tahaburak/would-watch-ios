@@ -14,7 +14,7 @@ struct would_watchApp: App {
     var body: some Scene {
         WindowGroup {
             if authViewModel.isAuthenticated {
-                ContentView()
+                MainTabView()
                     .environmentObject(authViewModel)
             } else {
                 LoginView()
