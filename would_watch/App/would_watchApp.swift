@@ -6,11 +6,18 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 @main
 struct would_watchApp: App {
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var deepLinkHandler = DeepLinkHandler()
+    @StateObject private var pushNotificationService = PushNotificationService.shared
+
+    init() {
+        // Setup notification delegate
+        UNUserNotificationCenter.current().delegate = PushNotificationService.shared
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -28,6 +35,15 @@ struct would_watchApp: App {
                     .onChange(of: authViewModel.isAuthenticated) { _, isAuthenticated in
                         if isAuthenticated {
                             deepLinkHandler.handlePendingDeepLink(isAuthenticated: true)
+                            // Request push notification permission after login
+                            Task {
+                                await pushNotificationService.requestAuthorization()
+                            }
+                        }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didRegisterForRemoteNotificationsWithDeviceTokenNotification)) { notification in
+                        if let token = notification.object as? Data {
+                            pushNotificationService.handleDeviceToken(token)
                         }
                     }
             } else {
