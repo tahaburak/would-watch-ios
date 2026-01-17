@@ -1,0 +1,19 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+*.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+DerivedData/
+build/
+
+# System
+.DS_Store
+.idea/
+
+# --- JetBrains ---
+.idea/
+*.iml
+*.iws
+out/
+
