@@ -10,6 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject var viewModel: AuthViewModel
     @State private var isSignUpMode = false
+    @State private var showSettings = false
 
     var body: some View {
         NavigationView {
@@ -36,14 +37,27 @@ struct LoginView: View {
                     VStack(spacing: 16) {
                         TextField("Email", text: $viewModel.email)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+#if canImport(UIKit)
                             .textContentType(.emailAddress)
-                            .autocapitalization(.none)
+#elseif canImport(AppKit)
+                            .textContentType(.emailAddress)
+#endif
+                            .autocorrectionDisabled()
+#if os(iOS)
                             .keyboardType(.emailAddress)
+#endif
                             .disabled(viewModel.isLoading)
+#if os(iOS)
+                            .textInputAutocapitalization(.never)
+#endif
 
                         SecureField("Password", text: $viewModel.password)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+#if canImport(UIKit)
                             .textContentType(isSignUpMode ? .newPassword : .password)
+#elseif canImport(AppKit)
+                            .textContentType(.password)
+#endif
                             .disabled(viewModel.isLoading)
                     }
                     .padding(.horizontal)
@@ -102,7 +116,19 @@ struct LoginView: View {
                     Spacer()
                 }
             }
-            .navigationBarHidden(true)
+            #if os(iOS)
+            .navigationBarHidden(false)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gear")
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NetworkSettingsSheet(isPresented: $showSettings)
+            }
         }
     }
 }

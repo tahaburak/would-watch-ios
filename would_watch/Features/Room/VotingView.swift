@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct VotingView: View {
     let roomId: String
@@ -21,8 +24,13 @@ struct VotingView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(.systemBackground)
+                #if canImport(UIKit)
+                Color(UIColor.systemBackground)
                     .ignoresSafeArea()
+                #else
+                Color(white: 1.0)
+                    .ignoresSafeArea()
+                #endif
 
                 VStack(spacing: 20) {
                     if movieViewModel.movies.isEmpty {
@@ -41,8 +49,11 @@ struct VotingView: View {
                 }
             }
             .navigationTitle("Vote on Movies")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") {
                         dismiss()
@@ -56,6 +67,21 @@ struct VotingView: View {
                         Image(systemName: "magnifyingglass")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .automatic) {
+                    Button(action: {
+                        showingSearch = true
+                    }) {
+                        Image(systemName: "magnifyingglass")
+                    }
+                }
+                #endif
             }
             .sheet(isPresented: $showingSearch) {
                 MovieSearchView { movie in
@@ -134,9 +160,9 @@ struct VotingView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.systemBackground))
+            .background(movieInfoBackgroundColor)
         }
-        .background(Color(.systemGray6))
+        .background(movieCardBackgroundColor)
         .cornerRadius(16)
         .shadow(radius: 10)
         .offset(dragOffset)
@@ -277,7 +303,7 @@ struct VotingView: View {
             .padding(40)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemBackground))
+                    .fill(matchOverlayBackgroundColor)
             )
         }
         .transition(.opacity)
@@ -293,7 +319,7 @@ struct VotingView: View {
     private func handleVote(movie: Movie, vote: VoteType) {
         Task {
             do {
-                let response = try await roomViewModel.roomService.submitVote(
+                let response = try await roomViewModel.submitVote(
                     roomId: roomId,
                     mediaId: movie.id,
                     vote: vote
@@ -325,6 +351,31 @@ struct VotingView: View {
 
     private func addMovieToVoting(_ movie: Movie) {
         movieViewModel.movies.append(movie)
+    }
+
+    // MARK: - Background Colors
+    private var movieInfoBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(white: 1.0)
+        #endif
+    }
+
+    private var movieCardBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
+    }
+
+    private var matchOverlayBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(white: 1.0)
+        #endif
     }
 }
 

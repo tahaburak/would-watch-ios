@@ -21,7 +21,9 @@ struct CreateRoomSheet: View {
             Form {
                 Section(header: Text("Room Details")) {
                     TextField("Room Name", text: $roomName)
+#if os(iOS)
                         .textInputAutocapitalization(.words)
+#endif
                 }
 
                 Section(header: Text("Invite Friends")) {
@@ -59,14 +61,16 @@ struct CreateRoomSheet: View {
                 }
             }
             .navigationTitle("Create Room")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Create") {
                         Task {
@@ -75,6 +79,21 @@ struct CreateRoomSheet: View {
                     }
                     .disabled(roomName.isEmpty || roomViewModel.isLoading)
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .automatic) {
+                    Button("Create") {
+                        Task {
+                            await createRoom()
+                        }
+                    }
+                    .disabled(roomName.isEmpty || roomViewModel.isLoading)
+                }
+                #endif
             }
             .task {
                 await socialViewModel.loadFriends()

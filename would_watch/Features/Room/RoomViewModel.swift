@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import SwiftUI
 
 @MainActor
@@ -66,5 +67,13 @@ final class RoomViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    func submitVote(roomId: String, mediaId: Int, vote: VoteType) async throws -> VoteResponse {
+        return try await roomService.submitVote(roomId: roomId, mediaId: mediaId, vote: vote)
+    }
+
+    func getMatches(roomId: String) async throws -> [RoomMatch] {
+        return try await roomService.getMatches(roomId: roomId)
     }
 }

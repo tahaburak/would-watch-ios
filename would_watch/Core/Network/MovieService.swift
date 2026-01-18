@@ -26,7 +26,7 @@ final class MovieService: MovieServiceProtocol {
         }
 
         let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-        let response: Response = try await apiClient.get(endpoint: "/media/search?q=\(encodedQuery)")
+        let response: Response = try await apiClient.get(endpoint: "/media/search?q=\(encodedQuery)", headers: nil)
         return response.results
     }
 
@@ -35,11 +35,11 @@ final class MovieService: MovieServiceProtocol {
             let results: [Movie]
         }
 
-        let response: Response = try await apiClient.get(endpoint: "/media/popular")
+        let response: Response = try await apiClient.get(endpoint: "/media/popular", headers: nil)
         return response.results
     }
 
     func getMovieDetails(id: Int) async throws -> Movie {
-        return try await apiClient.get(endpoint: "/media/\(id)")
+        return try await apiClient.get(endpoint: "/media/\(id)", headers: nil)
     }
 }

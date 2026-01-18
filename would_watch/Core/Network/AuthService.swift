@@ -24,7 +24,8 @@ final class AuthService: AuthServiceProtocol {
         let request = LoginRequest(email: email, password: password)
         let response: AuthResponse = try await apiClient.post(
             endpoint: "/auth/login",
-            body: request
+            body: request,
+            headers: nil
         )
 
         // Store token in APIClient
@@ -40,7 +41,8 @@ final class AuthService: AuthServiceProtocol {
         let request = SignUpRequest(email: email, password: password)
         let response: AuthResponse = try await apiClient.post(
             endpoint: "/auth/signup",
-            body: request
+            body: request,
+            headers: nil
         )
 
         // Store token in APIClient

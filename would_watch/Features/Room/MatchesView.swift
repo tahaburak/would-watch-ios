@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct MatchesView: View {
     let roomId: String
@@ -28,13 +31,23 @@ struct MatchesView: View {
                 }
             }
             .navigationTitle("Matches")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
             .task {
                 await loadMatches()
@@ -80,7 +93,7 @@ struct MatchesView: View {
         errorMessage = nil
 
         do {
-            matches = try await roomViewModel.roomService.getMatches(roomId: roomId)
+            matches = try await roomViewModel.getMatches(roomId: roomId)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -200,7 +213,7 @@ struct MatchCard: View {
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(Color(.systemGray6))
+                            .background(voterBadgeBackgroundColor)
                             .cornerRadius(12)
                         }
                     }
@@ -236,7 +249,7 @@ struct MatchCard: View {
                         .foregroundColor(.primary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(Color(.systemGray5))
+                        .background(shareButtonBackgroundColor)
                         .cornerRadius(8)
                     }
                 }
@@ -244,9 +257,34 @@ struct MatchCard: View {
             }
             .padding()
         }
-        .background(Color(.systemBackground))
+        .background(matchCardBackgroundColor)
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+    }
+
+    // MARK: - Background Colors
+    private var voterBadgeBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
+    }
+
+    private var shareButtonBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray5)
+        #else
+        return Color.gray.opacity(0.15)
+        #endif
+    }
+
+    private var matchCardBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(white: 1.0)
+        #endif
     }
 }
 

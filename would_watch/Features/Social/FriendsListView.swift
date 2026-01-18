@@ -24,6 +24,7 @@ struct FriendsListView: View {
             }
             .navigationTitle("Friends")
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         showingSearch = true
@@ -31,6 +32,15 @@ struct FriendsListView: View {
                         Image(systemName: "plus")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button(action: {
+                        showingSearch = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                }
+                #endif
             }
             .sheet(isPresented: $showingSearch) {
                 UserSearchView(viewModel: viewModel)
@@ -136,3 +146,4 @@ struct FriendRowView: View {
 #Preview {
     FriendsListView()
 }
+

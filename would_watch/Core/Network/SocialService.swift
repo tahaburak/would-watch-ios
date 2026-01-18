@@ -25,7 +25,7 @@ final class SocialService: SocialServiceProtocol {
         struct Response: Codable {
             let friends: [Friend]
         }
-        let response: Response = try await apiClient.get(endpoint: "/social/friends")
+        let response: Response = try await apiClient.get(endpoint: "/social/friends", headers: nil)
         return response.friends
     }
 
@@ -34,18 +34,19 @@ final class SocialService: SocialServiceProtocol {
             let users: [Friend]
         }
         let response: Response = try await apiClient.get(
-            endpoint: "/social/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)"
+            endpoint: "/social/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)",
+            headers: nil
         )
         return response.users
     }
 
     func followUser(userId: String) async throws -> FollowResponse {
         let request = FollowRequest(userId: userId)
-        return try await apiClient.post(endpoint: "/social/follow", body: request)
+        return try await apiClient.post(endpoint: "/social/follow", body: request, headers: nil)
     }
 
     func unfollowUser(userId: String) async throws -> FollowResponse {
         let request = FollowRequest(userId: userId)
-        return try await apiClient.post(endpoint: "/social/unfollow", body: request)
+        return try await apiClient.post(endpoint: "/social/unfollow", body: request, headers: nil)
     }
 }

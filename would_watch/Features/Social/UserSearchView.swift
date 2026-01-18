@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct UserSearchView: View {
     @ObservedObject var viewModel: SocialViewModel
@@ -28,13 +31,23 @@ struct UserSearchView: View {
                 }
             }
             .navigationTitle("Find Friends")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
         }
     }
@@ -46,7 +59,10 @@ struct UserSearchView: View {
 
             TextField("Search by username or email", text: $viewModel.searchQuery)
                 .textFieldStyle(PlainTextFieldStyle())
-                .autocapitalization(.none)
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                .autocorrectionDisabled()
                 .onChange(of: viewModel.searchQuery) { _, _ in
                     Task {
                         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s debounce
@@ -64,7 +80,7 @@ struct UserSearchView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(searchBarBackgroundColor)
         .cornerRadius(10)
         .padding()
     }
@@ -166,6 +182,16 @@ struct UserSearchRowView: View {
             .buttonStyle(PlainButtonStyle())
         }
         .padding(.vertical, 4)
+    }
+}
+
+private extension UserSearchView {
+    var searchBarBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
     }
 }
 

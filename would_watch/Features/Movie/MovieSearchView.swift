@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct MovieSearchView: View {
     @StateObject private var viewModel = MovieViewModel()
@@ -34,13 +37,23 @@ struct MovieSearchView: View {
                 }
             }
             .navigationTitle("Search Movies")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                #endif
             }
             .task {
                 await viewModel.loadPopularMovies()
@@ -55,7 +68,9 @@ struct MovieSearchView: View {
 
             TextField("Search movies...", text: $viewModel.searchQuery)
                 .textFieldStyle(PlainTextFieldStyle())
-                .autocapitalization(.words)
+                #if os(iOS)
+                .textInputAutocapitalization(.words)
+                #endif
                 .onChange(of: viewModel.searchQuery) { _, _ in
                     Task {
                         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s debounce
@@ -74,7 +89,7 @@ struct MovieSearchView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(searchBarBackgroundColor)
         .cornerRadius(10)
         .padding()
     }
@@ -203,6 +218,16 @@ struct MovieGridItem: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+private extension MovieSearchView {
+    var searchBarBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
     }
 }
 

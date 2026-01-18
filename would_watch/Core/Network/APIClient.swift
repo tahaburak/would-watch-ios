@@ -14,17 +14,29 @@ protocol APIClientProtocol {
         body: Data?,
         headers: [String: String]?
     ) async throws -> T
+    
+    // Convenience methods
+    func get<T: Decodable>(endpoint: String, headers: [String: String]?) async throws -> T
+    func post<T: Decodable, U: Encodable>(
+        endpoint: String,
+        body: U,
+        headers: [String: String]?
+    ) async throws -> T
+    func put<T: Decodable, U: Encodable>(
+        endpoint: String,
+        body: U,
+        headers: [String: String]?
+    ) async throws -> T
+    func delete<T: Decodable>(endpoint: String, headers: [String: String]?) async throws -> T
 }
 
 final class APIClient: APIClientProtocol {
     static let shared = APIClient()
 
-    private let baseURL: String
     private let session: URLSession
     private var authToken: String?
 
-    init(baseURL: String = AppConfig.backendBaseURL, session: URLSession = .shared) {
-        self.baseURL = baseURL
+    init(session: URLSession = .shared) {
         self.session = session
     }
 
@@ -38,7 +50,7 @@ final class APIClient: APIClientProtocol {
         body: Data? = nil,
         headers: [String: String]? = nil
     ) async throws -> T {
-        guard let url = URL(string: baseURL + endpoint) else {
+        guard let url = URL(string: AppConfig.backendBaseURL + endpoint) else {
             throw NetworkError.invalidURL
         }
 
@@ -59,7 +71,12 @@ final class APIClient: APIClientProtocol {
             request.setValue(value, forHTTPHeaderField: key)
         }
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw NetworkError.connectionError(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.noData

@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import Combine
 import SwiftUI
 
-@MainActor
 final class ProfileViewModel: ObservableObject {
     @Published var profile: UserProfile?
     @Published var isLoading: Bool = false
@@ -20,6 +20,7 @@ final class ProfileViewModel: ObservableObject {
         self.profileService = profileService
     }
 
+    @MainActor
     func loadProfile() async {
         isLoading = true
         errorMessage = nil
@@ -33,12 +34,13 @@ final class ProfileViewModel: ObservableObject {
         isLoading = false
     }
 
+    @MainActor
     func updatePrivacy(_ privacy: PrivacySetting) async {
         isLoading = true
         errorMessage = nil
 
         do {
-            profile = try await profileService.updateProfile(privacy: privacy)
+            profile = try await profileService.updateProfile(username: nil, privacy: privacy)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -46,6 +48,7 @@ final class ProfileViewModel: ObservableObject {
         isLoading = false
     }
 
+    @MainActor
     func updateUsername(_ username: String) async {
         guard !username.isEmpty else {
             errorMessage = "Username cannot be empty"
@@ -56,7 +59,7 @@ final class ProfileViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            profile = try await profileService.updateProfile(username: username)
+            profile = try await profileService.updateProfile(username: username, privacy: nil)
         } catch {
             errorMessage = error.localizedDescription
         }

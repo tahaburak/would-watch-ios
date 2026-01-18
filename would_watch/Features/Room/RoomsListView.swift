@@ -24,6 +24,7 @@ struct RoomsListView: View {
             }
             .navigationTitle("Rooms")
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         showingCreateRoom = true
@@ -31,6 +32,15 @@ struct RoomsListView: View {
                         Image(systemName: "plus")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button(action: {
+                        showingCreateRoom = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                }
+                #endif
             }
             .sheet(isPresented: $showingCreateRoom) {
                 CreateRoomSheet(roomViewModel: viewModel)

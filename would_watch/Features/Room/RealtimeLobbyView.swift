@@ -7,6 +7,9 @@
 
 import SwiftUI
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct RealtimeLobbyView: View {
     let roomId: String
@@ -40,7 +43,9 @@ struct RealtimeLobbyView: View {
             }
         }
         .navigationTitle("Room")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .task {
             await loadRoom()
             setupRealtimeSubscriptions()
@@ -87,7 +92,7 @@ struct RealtimeLobbyView: View {
                             .foregroundColor(.green)
                     }
                     .padding(.horizontal, 12)
-                    .padding(.vertical: 4)
+                    .padding(.vertical, 4)
                     .background(Color.green.opacity(0.1))
                     .cornerRadius(12)
                 }
@@ -110,7 +115,7 @@ struct RealtimeLobbyView: View {
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(Color(.systemGray6))
+                            .background(participantCountBackgroundColor)
                             .cornerRadius(8)
                     }
 
@@ -196,7 +201,7 @@ struct RealtimeLobbyView: View {
                     }
 
                     // Share Button
-                    ShareLink(item: "Join my Would Watch room: \(room.name) - wouldwatch://room/\(room.id)") {
+                    ShareLink(item: URL(string: "wouldwatch://room/\(room.id)")!, message: Text("Join my Would Watch room: \(room.name) - wouldwatch://room/\(room.id)")) {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
                             Text("Share Room")
@@ -205,7 +210,7 @@ struct RealtimeLobbyView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray5))
+                        .background(shareButtonBackgroundColor)
                         .foregroundColor(.primary)
                         .cornerRadius(10)
                     }
@@ -234,7 +239,7 @@ struct RealtimeLobbyView: View {
         .padding(30)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(matchNotificationBackgroundColor)
                 .shadow(radius: 20)
         )
         .transition(.scale.combined(with: .opacity))
@@ -258,7 +263,7 @@ struct RealtimeLobbyView: View {
                     .fontWeight(.semibold)
             }
             .padding()
-            .background(Color(.systemBackground))
+            .background(participantOverlayBackgroundColor)
             .cornerRadius(12)
             .shadow(radius: 10)
         }
@@ -344,6 +349,39 @@ struct RealtimeLobbyView: View {
                 showMatchNotification = true
             }
         }
+    }
+
+    // MARK: - Background Colors
+    private var participantCountBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
+    }
+
+    private var shareButtonBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray5)
+        #else
+        return Color.gray.opacity(0.15)
+        #endif
+    }
+
+    private var matchNotificationBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(white: 1.0)
+        #endif
+    }
+
+    private var participantOverlayBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemBackground)
+        #else
+        return Color(white: 1.0)
+        #endif
     }
 }
 

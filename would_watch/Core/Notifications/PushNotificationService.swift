@@ -6,7 +6,11 @@
 //
 
 import Foundation
+import Combine
 import UserNotifications
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum NotificationType: String {
     case roomInvite = "room_invite"
@@ -40,7 +44,7 @@ final class PushNotificationService: NSObject, ObservableObject {
             isAuthorized = granted
 
             if granted {
-                await registerForRemoteNotifications()
+                registerForRemoteNotifications()
             }
 
             return granted
@@ -50,8 +54,12 @@ final class PushNotificationService: NSObject, ObservableObject {
         }
     }
 
-    func registerForRemoteNotifications() async {
-        await UIApplication.shared.registerForRemoteNotifications()
+    func registerForRemoteNotifications() {
+        #if canImport(UIKit)
+        DispatchQueue.main.async {
+            UIApplication.shared.registerForRemoteNotifications()
+        }
+        #endif
     }
 
     @MainActor
@@ -144,6 +152,7 @@ extension PushNotificationService: UNUserNotificationCenterDelegate {
     }
 
     private func handleNotificationTap(_ payload: NotificationPayload) {
+        #if canImport(UIKit)
         switch payload.type {
         case .roomInvite:
             if let roomId = payload.roomId {
@@ -169,5 +178,6 @@ extension PushNotificationService: UNUserNotificationCenterDelegate {
             // Maybe navigate to room or show in-app alert
             break
         }
+        #endif
     }
 }

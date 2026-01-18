@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
@@ -26,6 +29,7 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         showingSettings = true
@@ -33,6 +37,15 @@ struct ProfileView: View {
                         Image(systemName: "gear")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gear")
+                    }
+                }
+                #endif
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsSheet(viewModel: viewModel, authViewModel: authViewModel)
@@ -140,8 +153,18 @@ struct StatView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(statBackgroundColor)
         .cornerRadius(12)
+    }
+}
+
+private extension StatView {
+    var statBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray6)
+        #else
+        return Color.gray.opacity(0.1)
+        #endif
     }
 }
 
@@ -149,3 +172,4 @@ struct StatView: View {
     ProfileView()
         .environmentObject(AuthViewModel())
 }
+

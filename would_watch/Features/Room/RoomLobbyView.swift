@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct RoomLobbyView: View {
     let roomId: String
@@ -26,7 +29,9 @@ struct RoomLobbyView: View {
             }
         }
         .navigationTitle("Room")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .task {
             await loadRoom()
         }
@@ -152,7 +157,7 @@ struct RoomLobbyView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray5))
+                        .background(shareButtonBackgroundColor)
                         .foregroundColor(.primary)
                         .cornerRadius(10)
                     }
@@ -189,6 +194,14 @@ struct RoomLobbyView: View {
         // Use the room service to load room details
         // For now, we'll simulate it with the viewModel
         // In a real app, you'd call viewModel.getRoom(roomId)
+    }
+
+    private var shareButtonBackgroundColor: Color {
+        #if canImport(UIKit)
+        return Color(UIColor.systemGray5)
+        #else
+        return Color.gray.opacity(0.15)
+        #endif
     }
 }
 
