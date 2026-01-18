@@ -42,10 +42,10 @@ enum AppConfig {
         return "http://localhost:8080/api"
         #endif
         #else
-        return "https://your-production-api.com/api"
+        return "https://would.watch/api"
         #endif
     }()
 
-    static let supabaseURL = "https://your-supabase-url.supabase.co"
-    static let supabaseAnonKey = "your-supabase-anon-key"
+    static let supabaseURL = "https://gtjokreqhfsydfmtbtvg.supabase.co"
+    static let supabaseAnonKey = "sb_publishable_G-_D63xGxZ9_GED4okXgoQ_pz-Kjn6E"
 }
