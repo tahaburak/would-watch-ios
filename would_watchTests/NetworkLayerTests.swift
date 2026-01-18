@@ -160,8 +160,10 @@ final class NetworkLayerTests: XCTestCase {
         {
             "id": "room-123",
             "name": "Test Room",
+            "host_id": "user-123",
+            "status": "active",
             "created_at": "2026-01-19T12:00:00Z",
-            "created_by": "user-123"
+            "participants": ["user-123", "user-456"]
         }
         """
 
@@ -180,28 +182,32 @@ final class NetworkLayerTests: XCTestCase {
             // Then
             XCTAssertEqual(room.id, "room-123")
             XCTAssertEqual(room.name, "Test Room")
-            XCTAssertEqual(room.createdBy, "user-123")
+            XCTAssertEqual(room.hostId, "user-123")
+            XCTAssertEqual(room.status, .active)
         } catch {
             XCTFail("Should decode Room model: \(error)")
         }
     }
 
-    func testDecodesMediaModel() async {
+    func testDecodesMovieModel() async {
         // Given
         let mockSession = URLSessionMock()
         let apiClient = APIClient(session: mockSession)
 
-        let mediaJSON = """
+        let movieJSON = """
         {
-            "id": "media-123",
-            "tmdb_id": 550,
+            "id": 550,
             "title": "Fight Club",
+            "overview": "An insomniac office worker...",
             "poster_path": "/poster.jpg",
-            "media_type": "movie"
+            "backdrop_path": "/backdrop.jpg",
+            "release_date": "1999-10-15",
+            "vote_average": 8.4,
+            "vote_count": 20000
         }
         """
 
-        mockSession.data = mediaJSON.data(using: .utf8)!
+        mockSession.data = movieJSON.data(using: .utf8)!
         mockSession.response = HTTPURLResponse(
             url: URL(string: AppConfig.backendBaseURL + "/test")!,
             statusCode: 200,
@@ -211,15 +217,15 @@ final class NetworkLayerTests: XCTestCase {
 
         // When
         do {
-            let media: Media = try await apiClient.get(endpoint: "/test", headers: nil)
+            let movie: Movie = try await apiClient.get(endpoint: "/test", headers: nil)
 
             // Then
-            XCTAssertEqual(media.id, "media-123")
-            XCTAssertEqual(media.tmdbId, 550)
-            XCTAssertEqual(media.title, "Fight Club")
-            XCTAssertEqual(media.posterPath, "/poster.jpg")
+            XCTAssertEqual(movie.id, 550)
+            XCTAssertEqual(movie.title, "Fight Club")
+            XCTAssertEqual(movie.posterPath, "/poster.jpg")
+            XCTAssertEqual(movie.backdropPath, "/backdrop.jpg")
         } catch {
-            XCTFail("Should decode Media model: \(error)")
+            XCTFail("Should decode Movie model: \(error)")
         }
     }
 
@@ -342,6 +348,12 @@ class URLSessionMock: URLSession {
     var error: Error?
     var lastRequest: URLRequest?
 
+    init() {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        super.init(configuration: configuration, delegate: nil, delegateQueue: nil)
+    }
+
     override func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         lastRequest = request
 
@@ -354,5 +366,23 @@ class URLSessionMock: URLSession {
         }
 
         return (data, response)
+    }
+}
+
+class MockURLProtocol: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+
+    override func startLoading() {
+        // Not used since we override data(for:) directly
+    }
+
+    override func stopLoading() {
+        // Not used since we override data(for:) directly
     }
 }
