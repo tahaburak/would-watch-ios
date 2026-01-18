@@ -8,7 +8,6 @@
 
 /* Begin PBXFileReference section */
 		67D22E1F2F1C2651001BF04E /* would_watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = would_watch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		67D22E2F2F1C26AB001BF04E /* would_watch.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = would_watch.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -42,13 +41,6 @@
 			isa = PBXGroup;
 			children = (
 				67D22E1F2F1C2651001BF04E /* would_watch.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		67D22E312F1C26AB001BF04E /* Products */ = {
-			isa = PBXGroup;
-			children = (
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -105,12 +97,6 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 67D22E202F1C2651001BF04E /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 67D22E312F1C26AB001BF04E /* Products */;
-					ProjectRef = 67D22E2F2F1C26AB001BF04E /* would_watch.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				67D22E1E2F1C2651001BF04E /* would_watch */,
