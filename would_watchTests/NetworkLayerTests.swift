@@ -342,47 +342,34 @@ final class NetworkLayerTests: XCTestCase {
 
 // MARK: - URLSession Mock
 
-class URLSessionMock: URLSession {
+@MainActor
+final class URLSessionMock: URLSession {
     var data: Data?
     var response: URLResponse?
     var error: Error?
     var lastRequest: URLRequest?
 
-    init() {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [MockURLProtocol.self]
-        super.init(configuration: configuration, delegate: nil, delegateQueue: nil)
+    nonisolated override init() {
+        super.init()
     }
 
-    override func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        lastRequest = request
+    nonisolated override func data(for request: URLRequest, delegate: (any URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
+        // Store the request
+        await MainActor.run {
+            self.lastRequest = request
+        }
 
-        if let error = error {
+        // Check for error
+        if let error = await MainActor.run(body: { self.error }) {
             throw error
         }
 
-        guard let data = data, let response = response else {
+        // Get data and response
+        guard let data = await MainActor.run(body: { self.data }),
+              let response = await MainActor.run(body: { self.response }) else {
             throw NetworkError.noData
         }
 
         return (data, response)
-    }
-}
-
-class MockURLProtocol: URLProtocol {
-    override class func canInit(with request: URLRequest) -> Bool {
-        return true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        return request
-    }
-
-    override func startLoading() {
-        // Not used since we override data(for:) directly
-    }
-
-    override func stopLoading() {
-        // Not used since we override data(for:) directly
     }
 }
