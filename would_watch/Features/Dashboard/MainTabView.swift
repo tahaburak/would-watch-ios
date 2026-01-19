@@ -17,19 +17,23 @@ struct MainTabView: View {
                     Label("Rooms", systemImage: "rectangle.stack")
                 }
                 .tag(0)
+                .accessibilityIdentifier("RoomsTab")
 
             FriendsListView()
                 .tabItem {
                     Label("Friends", systemImage: "person.2")
                 }
                 .tag(1)
+                .accessibilityIdentifier("FriendsTab")
 
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person")
                 }
                 .tag(2)
+                .accessibilityIdentifier("ProfileTab")
         }
+        .accessibilityIdentifier("MainTabView")
     }
 }
 

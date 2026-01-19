@@ -51,6 +51,7 @@ struct would_watchApp: App {
             .onOpenURL { url in
                 deepLinkHandler.handle(url, isAuthenticated: authViewModel.isAuthenticated)
             }
+            .toastNotification()
         }
     }
 }

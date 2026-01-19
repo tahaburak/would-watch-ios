@@ -30,8 +30,8 @@ final class RoomViewModelTests: XCTestCase {
     func testLoadRoomsSuccess() async {
         // Given
         let expectedRooms = [
-            Room(id: "room-1", name: "Room 1", hostId: "host-1", status: .active, createdAt: nil, participants: nil),
-            Room(id: "room-2", name: "Room 2", hostId: "host-2", status: .active, createdAt: nil, participants: nil)
+            Room(id: "room-1", name: "Room 1", hostId: "host-1", status: .active, createdAt: nil, participants: nil, isPublic: nil),
+            Room(id: "room-2", name: "Room 2", hostId: "host-2", status: .active, createdAt: nil, participants: nil, isPublic: nil)
         ]
         mockRoomService.mockRooms = expectedRooms
 
@@ -103,7 +103,8 @@ final class RoomViewModelTests: XCTestCase {
             hostId: "host-1",
             status: .active,
             createdAt: nil,
-            participants: participants
+            participants: participants,
+            isPublic: false
         )
         mockRoomService.mockCreatedRoom = expectedRoom
 
@@ -115,7 +116,7 @@ final class RoomViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isLoading, "Loading should be false after completion")
         XCTAssertEqual(viewModel.rooms.count, 1, "New room should be added to rooms list")
         XCTAssertEqual(viewModel.rooms[0].id, "new-room")
-        XCTAssertEqual(viewModel.rooms[0].name, roomName)
+        XCTAssertEqual(viewModel.rooms[0].displayName, roomName)
         XCTAssertNil(viewModel.errorMessage, "Error message should be nil on success")
     }
 
@@ -153,10 +154,10 @@ final class RoomViewModelTests: XCTestCase {
     func testCreateRoomAddsToBeginningOfList() async {
         // Given
         viewModel.rooms = [
-            Room(id: "existing-1", name: "Existing 1", hostId: "host", status: .active, createdAt: nil, participants: nil)
+            Room(id: "existing-1", name: "Existing 1", hostId: "host", status: .active, createdAt: nil, participants: nil, isPublic: nil)
         ]
 
-        let newRoom = Room(id: "new-room", name: "New Room", hostId: "host", status: .active, createdAt: nil, participants: nil)
+        let newRoom = Room(id: "new-room", name: "New Room", hostId: "host", status: .active, createdAt: nil, participants: nil, isPublic: nil)
         mockRoomService.mockCreatedRoom = newRoom
 
         // When
@@ -174,7 +175,7 @@ final class RoomViewModelTests: XCTestCase {
     func testJoinRoomSuccess() async {
         // Given
         let roomId = "room-123"
-        let joinedRoom = Room(id: roomId, name: "Joined Room", hostId: "host", status: .active, createdAt: nil, participants: nil)
+        let joinedRoom = Room(id: roomId, name: "Joined Room", hostId: "host", status: .active, createdAt: nil, participants: nil, isPublic: nil)
         mockRoomService.mockJoinedRoom = joinedRoom
         mockRoomService.mockRooms = [joinedRoom]
 
@@ -205,12 +206,9 @@ final class RoomViewModelTests: XCTestCase {
     func testJoinRoomReloadsRoomList() async {
         // Given
         let roomId = "room-123"
-        let initialRooms = [
-            Room(id: "room-1", name: "Room 1", hostId: "host", status: .active, createdAt: nil, participants: nil)
-        ]
         let updatedRooms = [
-            Room(id: "room-1", name: "Room 1", hostId: "host", status: .active, createdAt: nil, participants: nil),
-            Room(id: roomId, name: "Joined Room", hostId: "host", status: .active, createdAt: nil, participants: nil)
+            Room(id: "room-1", name: "Room 1", hostId: "host", status: .active, createdAt: nil, participants: nil, isPublic: nil),
+            Room(id: roomId, name: "Joined Room", hostId: "host", status: .active, createdAt: nil, participants: nil, isPublic: nil)
         ]
 
         mockRoomService.mockJoinedRoom = updatedRooms[1]

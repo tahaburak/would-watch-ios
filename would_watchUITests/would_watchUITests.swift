@@ -4,6 +4,15 @@
 //
 //  Created by burak on 18/01/2026.
 //
+//  IMPORTANT: These UI tests require valid Supabase credentials.
+//  
+//  TEST CREDENTIALS:
+//  - Email: tahaburak.koc+wwtest@gmail.com
+//  - Password: password123
+//  
+//  Ensure your Supabase URL and keys are correctly configured in AppConfig.swift
+//  These tests will fail with "invalid_credentials" errors if the test user doesn't exist.
+//
 
 import XCTest
 
@@ -54,15 +63,40 @@ final class would_watchUITests: XCTestCase {
         app.launch()
         loginSuccessfully()
 
-        // When
-        let settingsButton = app.buttons["Settings"]
-        if settingsButton.exists {
-            settingsButton.tap()
+        // Wait for main tab view to appear - this will fail with helpful message if login didn't work
+        let roomsTab = app.buttons["Rooms"]
+        let friendsTab = app.buttons["Friends"]
+        let profileTab = app.buttons["Profile"]
 
-            // Then
-            let settingsTitle = app.navigationBars["Settings"]
-            XCTAssertTrue(settingsTitle.waitForExistence(timeout: 3), "Settings screen should appear")
-        }
+        // Check for any tab to confirm we're in the main app
+        let tabViewExists = roomsTab.waitForExistence(timeout: 5) ||
+                          friendsTab.waitForExistence(timeout: 5) ||
+                          profileTab.waitForExistence(timeout: 5)
+
+        XCTAssertTrue(tabViewExists, "TabView should appear after successful login. If this fails, login likely didn't complete - check test credentials in Supabase.")
+
+        // Navigate to Profile tab (where Settings button is)
+        XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
+        profileTab.tap()
+        
+        // Wait a moment for tab switch animation
+        sleep(1)
+        
+        // Wait for profile screen - check for navigation title or any profile content
+        let profileTitle = app.navigationBars["Profile"]
+        let profileContent = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'profile' OR label CONTAINS[c] 'activity'")).firstMatch
+        
+        let profileScreenVisible = profileTitle.waitForExistence(timeout: 5) || profileContent.waitForExistence(timeout: 5)
+        XCTAssertTrue(profileScreenVisible, "Profile screen should appear after tapping Profile tab")
+        
+        // When - Tap settings button
+        let settingsButton = app.buttons["Settings"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "Settings button should be visible on Profile screen")
+        settingsButton.tap()
+
+        // Then - Wait for settings sheet to appear
+        let settingsTitle = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings screen should appear after tapping Settings button")
     }
 
     @MainActor
@@ -71,9 +105,33 @@ final class would_watchUITests: XCTestCase {
         app.launch()
         loginSuccessfully()
 
-        // Then
-        let roomsTitle = app.navigationBars.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'room'")).firstMatch
-        XCTAssertTrue(roomsTitle.waitForExistence(timeout: 5), "Rooms screen should be visible after login")
+        // Then - Check for Rooms tab (should be selected by default)
+        // First verify TabView exists
+        let roomsTab = app.buttons["Rooms"]
+        let friendsTab = app.buttons["Friends"]
+        let profileTab = app.buttons["Profile"]
+
+        let tabViewExists = roomsTab.waitForExistence(timeout: 5) ||
+                          friendsTab.waitForExistence(timeout: 5) ||
+                          profileTab.waitForExistence(timeout: 5)
+
+        XCTAssertTrue(tabViewExists, "TabView should appear after login. If this fails, login didn't complete.")
+        
+        // Now specifically check for Rooms tab
+        XCTAssertTrue(roomsTab.waitForExistence(timeout: 5), "Rooms tab should appear after login")
+        
+        // Verify Rooms tab is visible and selected
+        XCTAssertTrue(roomsTab.exists, "Rooms tab should be visible")
+        
+        // Check for navigation title - RoomsListView has navigationTitle("Rooms")
+        let roomsTitle = app.navigationBars["Rooms"]
+        let roomsTitleVisible = roomsTitle.waitForExistence(timeout: 5)
+        
+        // Also check for any room-related content as fallback
+        let roomsContent = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'room' OR label CONTAINS[c] 'no rooms'")).firstMatch
+        let contentVisible = roomsContent.waitForExistence(timeout: 3)
+        
+        XCTAssertTrue(roomsTitleVisible || contentVisible, "Rooms screen should be visible after login (navigation title or content)")
     }
 
     // MARK: - Authentication Flow Tests
@@ -87,20 +145,37 @@ final class would_watchUITests: XCTestCase {
         let passwordField = app.secureTextFields["Password"]
         let loginButton = app.buttons["Log In"]
 
-        XCTAssertTrue(emailField.waitForExistence(timeout: 5))
+        XCTAssertTrue(emailField.waitForExistence(timeout: 5), "Email field should be visible on login screen")
 
         // When
         emailField.tap()
-        emailField.typeText("test@example.com")
+        emailField.typeText("tahaburak.koc+wwtest@gmail.com")
 
         passwordField.tap()
         passwordField.typeText("password123")
 
         loginButton.tap()
 
-        // Then
-        let homeIndicator = app.otherElements.containing(NSPredicate(format: "label CONTAINS[c] 'room' OR label CONTAINS[c] 'home'")).firstMatch
-        XCTAssertTrue(homeIndicator.waitForExistence(timeout: 5), "Should navigate to home screen after successful login")
+        // Then - Wait for navigation to main screen
+        // Check for TabView (MainTabView) which appears after successful login
+        let mainTabView = app.otherElements["MainTabView"]
+        let roomsTab = app.buttons["Rooms"]
+        let friendsTab = app.buttons["Friends"]
+        let profileTab = app.buttons["Profile"]
+
+        // Wait for at least one tab to appear (with longer timeout for network request)
+        let tabViewVisible = mainTabView.waitForExistence(timeout: 15) ||
+                            roomsTab.waitForExistence(timeout: 15) ||
+                            friendsTab.waitForExistence(timeout: 15) ||
+                            profileTab.waitForExistence(timeout: 15)
+        
+        XCTAssertTrue(tabViewVisible, "Should navigate to main screen (TabView) after successful login. Check if login credentials are valid.")
+        
+        // Also verify we're no longer on login screen
+        // Give it a moment for the transition
+        sleep(1)
+        let stillOnLoginScreen = emailField.exists
+        XCTAssertFalse(stillOnLoginScreen, "Should not be on login screen after successful login")
     }
 
     @MainActor
@@ -222,16 +297,69 @@ final class would_watchUITests: XCTestCase {
         let passwordField = app.secureTextFields["Password"]
         let loginButton = app.buttons["Log In"]
 
-        if emailField.waitForExistence(timeout: 5) {
-            emailField.tap()
-            emailField.typeText("test@example.com")
-
-            passwordField.tap()
-            passwordField.typeText("password123")
-
-            loginButton.tap()
-
-            sleep(2)
+        guard emailField.waitForExistence(timeout: 5) else {
+            XCTFail("Email field not found - cannot perform login")
+            return
         }
+
+        emailField.tap()
+        emailField.typeText("tahaburak.koc+wwtest@gmail.com")
+
+        passwordField.tap()
+        passwordField.typeText("password123")
+
+        loginButton.tap()
+
+        // Wait for either success (TabView appears) or failure (toast notification appears)
+        // Try multiple ways to find the TabView
+        let mainTabView = app.otherElements["MainTabView"]
+        let roomsTab = app.buttons["Rooms"]
+        let friendsTab = app.buttons["Friends"]
+        let profileTab = app.buttons["Profile"]
+
+        // Wait for navigation to complete - check for TabView or any tab
+        let loginSuccessful = mainTabView.waitForExistence(timeout: 15) ||
+                             roomsTab.waitForExistence(timeout: 15) ||
+                             friendsTab.waitForExistence(timeout: 15) ||
+                             profileTab.waitForExistence(timeout: 15)
+
+        if !loginSuccessful {
+            // Wait a moment for toast to appear (if login failed)
+            sleep(2)
+
+            // Check if there's a toast notification (error toast)
+            // Try multiple ways to find the toast
+            let toast = app.otherElements["ToastNotification"]
+            let toastMessage = app.staticTexts["ToastMessage"]
+            let toastByLabel = app.otherElements.containing(NSPredicate(format: "label CONTAINS[c] 'invalid' OR label CONTAINS[c] 'email' OR label CONTAINS[c] 'password' OR label CONTAINS[c] 'credentials'")).firstMatch
+
+            // Check for toast by looking for red error toast (error type is red)
+            let redToast = app.otherElements.containing(NSPredicate(format: "label CONTAINS[c] 'invalid email or password' OR label CONTAINS[c] 'invalid'")).firstMatch
+
+            var errorMessage: String? = nil
+
+            // Try to get error message from toast
+            if toastMessage.waitForExistence(timeout: 1) {
+                errorMessage = toastMessage.label
+            } else if toast.waitForExistence(timeout: 1) {
+                errorMessage = toast.label.isEmpty ? toast.value as? String : toast.label
+            } else if toastByLabel.waitForExistence(timeout: 1) {
+                errorMessage = toastByLabel.label
+            } else if redToast.waitForExistence(timeout: 1) {
+                errorMessage = redToast.label
+            }
+
+            if let error = errorMessage, !error.isEmpty {
+                XCTFail("Login failed with error: \(error). Please ensure test credentials (tahaburak.koc+wwtest@gmail.com / password123) exist in Supabase.")
+            } else if emailField.exists {
+                // Still on login screen - login likely failed but no toast detected
+                XCTFail("Login appears to have failed - still on login screen after 15 seconds. Check: 1) Test credentials exist in Supabase, 2) Network connection, 3) Supabase URL configuration. (Toast notification may not have appeared.)")
+            } else {
+                XCTFail("Login failed - neither TabView nor login screen detected. UI state unclear.")
+            }
+        }
+
+        // Additional wait to ensure UI is stable
+        sleep(1)
     }
 }

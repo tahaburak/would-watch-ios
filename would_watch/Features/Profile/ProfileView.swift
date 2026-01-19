@@ -36,6 +36,7 @@ struct ProfileView: View {
                     }) {
                         Image(systemName: "gear")
                     }
+                    .accessibilityIdentifier("Settings")
                 }
                 #else
                 ToolbarItem(placement: .automatic) {
@@ -44,6 +45,7 @@ struct ProfileView: View {
                     }) {
                         Image(systemName: "gear")
                     }
+                    .accessibilityIdentifier("Settings")
                 }
                 #endif
             }

@@ -57,7 +57,7 @@ struct RoomLobbyView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.blue)
 
-                    Text(room.name)
+                    Text(room.displayName)
                         .font(AppFonts.headlineLarge)
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
@@ -148,7 +148,7 @@ struct RoomLobbyView: View {
                     }
 
                     // Share Button
-                    ShareLink(item: "Join my Would Watch room: \(room.name) - ID: \(room.id)") {
+                    ShareLink(item: "Join my Would Watch room: \(room.displayName) - ID: \(room.id)") {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
                             Text("Share Room")

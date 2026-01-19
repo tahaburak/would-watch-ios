@@ -12,12 +12,14 @@ import XCTest
 final class AuthViewModelTests: XCTestCase {
     var viewModel: AuthViewModel!
     var mockAPIClient: MockAPIClient!
+    var mockSession: URLSessionMock!
     var authService: AuthService!
 
     override func setUp() {
         super.setUp()
         mockAPIClient = MockAPIClient()
-        authService = AuthService(apiClient: mockAPIClient)
+        mockSession = URLSessionMock()
+        authService = AuthService(apiClient: mockAPIClient, session: mockSession)
         viewModel = AuthViewModel(authService: authService)
     }
 
@@ -25,6 +27,7 @@ final class AuthViewModelTests: XCTestCase {
         viewModel = nil
         authService = nil
         mockAPIClient = nil
+        mockSession = nil
         super.tearDown()
     }
 
@@ -35,9 +38,26 @@ final class AuthViewModelTests: XCTestCase {
         let email = "test@example.com"
         let password = "password123"
         let expectedToken = "test-token-123"
-        let expectedUser = User(id: "user-123", email: email, createdAt: nil)
 
-        mockAPIClient.mockAuthResponse = AuthResponse(accessToken: expectedToken, refreshToken: "refresh-token", user: expectedUser)
+        // Mock Supabase response
+        let supabaseResponse = """
+        {
+            "access_token": "\(expectedToken)",
+            "refresh_token": "refresh-token",
+            "user": {
+                "id": "user-123",
+                "email": "\(email)",
+                "created_at": "2026-01-19T12:00:00Z"
+            }
+        }
+        """
+        mockSession.data = supabaseResponse.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/token")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
 
         viewModel.email = email
         viewModel.password = password
@@ -49,17 +69,29 @@ final class AuthViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isLoading, "Loading should be false after login completes")
         XCTAssertTrue(viewModel.isAuthenticated, "User should be authenticated")
         XCTAssertNil(viewModel.errorMessage, "Error message should be nil on success")
-        XCTAssertEqual(mockAPIClient.requestCallCount, 1, "API should be called once")
     }
 
     func testLoginUpdatesLoadingState() async {
         // Given
         let email = "test@example.com"
         let password = "password123"
-        mockAPIClient.mockAuthResponse = AuthResponse(
-            accessToken: "token",
-            refreshToken: "refresh",
-            user: User(id: "1", email: email, createdAt: nil)
+        let supabaseResponse = """
+        {
+            "access_token": "token",
+            "refresh_token": "refresh",
+            "user": {
+                "id": "1",
+                "email": "\(email)",
+                "created_at": "2026-01-19T12:00:00Z"
+            }
+        }
+        """
+        mockSession.data = supabaseResponse.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/token")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
         )
 
         viewModel.email = email
@@ -87,8 +119,7 @@ final class AuthViewModelTests: XCTestCase {
         let email = "test@example.com"
         let password = "wrongpassword"
 
-        mockAPIClient.shouldFail = true
-        mockAPIClient.mockError = NetworkError.connectionError(NSError(domain: "Test", code: -1009))
+        mockSession.error = NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet)
 
         viewModel.email = email
         viewModel.password = password
@@ -107,8 +138,19 @@ final class AuthViewModelTests: XCTestCase {
         let email = "test@example.com"
         let password = "wrongpassword"
 
-        mockAPIClient.shouldFail = true
-        mockAPIClient.mockError = NetworkError.unauthorized
+        // Mock Supabase error response
+        mockSession.data = """
+        {
+            "error": "invalid_grant",
+            "error_description": "Invalid email or password"
+        }
+        """.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/token")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )
 
         viewModel.email = email
         viewModel.password = password
@@ -135,7 +177,6 @@ final class AuthViewModelTests: XCTestCase {
         // Then
         XCTAssertNotNil(viewModel.errorMessage)
         XCTAssertTrue(viewModel.errorMessage?.contains("Email") ?? false)
-        XCTAssertEqual(mockAPIClient.requestCallCount, 0, "API should not be called with invalid input")
     }
 
     func testLoginValidationFailsWithEmptyPassword() async {
@@ -149,7 +190,6 @@ final class AuthViewModelTests: XCTestCase {
         // Then
         XCTAssertNotNil(viewModel.errorMessage)
         XCTAssertTrue(viewModel.errorMessage?.contains("Password") ?? false)
-        XCTAssertEqual(mockAPIClient.requestCallCount, 0)
     }
 
     func testLoginValidationFailsWithInvalidEmailFormat() async {
@@ -163,7 +203,6 @@ final class AuthViewModelTests: XCTestCase {
         // Then
         XCTAssertNotNil(viewModel.errorMessage)
         XCTAssertTrue(viewModel.errorMessage?.contains("email") ?? false)
-        XCTAssertEqual(mockAPIClient.requestCallCount, 0)
     }
 
     func testLoginValidationFailsWithShortPassword() async {
@@ -177,15 +216,24 @@ final class AuthViewModelTests: XCTestCase {
         // Then
         XCTAssertNotNil(viewModel.errorMessage)
         XCTAssertTrue(viewModel.errorMessage?.contains("6") ?? false)
-        XCTAssertEqual(mockAPIClient.requestCallCount, 0)
     }
 
     // MARK: - Error Message Clearing Tests
 
     func testErrorMessageClearsOnRetry() async {
         // Given - First login fails
-        mockAPIClient.shouldFail = true
-        mockAPIClient.mockError = NetworkError.unauthorized
+        mockSession.data = """
+        {
+            "error": "invalid_grant",
+            "error_description": "Invalid email or password"
+        }
+        """.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/token")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )
         viewModel.email = "test@example.com"
         viewModel.password = "wrongpassword"
 
@@ -193,11 +241,23 @@ final class AuthViewModelTests: XCTestCase {
         XCTAssertNotNil(viewModel.errorMessage)
 
         // When - Retry with success
-        mockAPIClient.reset()
-        mockAPIClient.mockAuthResponse = AuthResponse(
-            accessToken: "token",
-            refreshToken: "refresh",
-            user: User(id: "1", email: "test@example.com", createdAt: nil)
+        let supabaseResponse = """
+        {
+            "access_token": "token",
+            "refresh_token": "refresh",
+            "user": {
+                "id": "1",
+                "email": "test@example.com",
+                "created_at": "2026-01-19T12:00:00Z"
+            }
+        }
+        """
+        mockSession.data = supabaseResponse.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/token")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
         )
         viewModel.password = "correctpassword"
 
@@ -215,10 +275,23 @@ final class AuthViewModelTests: XCTestCase {
         let email = "newuser@example.com"
         let password = "password123"
 
-        mockAPIClient.mockAuthResponse = AuthResponse(
-            accessToken: "token",
-            refreshToken: "refresh",
-            user: User(id: "new-user-id", email: email, createdAt: nil)
+        let supabaseResponse = """
+        {
+            "access_token": "token",
+            "refresh_token": "refresh",
+            "user": {
+                "id": "new-user-id",
+                "email": "\(email)",
+                "created_at": "2026-01-19T12:00:00Z"
+            }
+        }
+        """
+        mockSession.data = supabaseResponse.data(using: String.Encoding.utf8)!
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "\(AppConfig.supabaseURL)/auth/v1/signup")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
         )
 
         viewModel.email = email

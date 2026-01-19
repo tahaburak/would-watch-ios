@@ -62,15 +62,6 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
 
-                    // Error Message
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .font(AppFonts.bodySmall)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-
                     // Action Buttons
                     VStack(spacing: 12) {
                         Button(action: {

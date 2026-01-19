@@ -27,7 +27,7 @@ enum NetworkError: LocalizedError {
         case .serverError(let statusCode, let message):
             return "Server error (\(statusCode)): \(message ?? "Unknown error")"
         case .unauthorized:
-            return "Unauthorized. Please log in again."
+            return "Invalid email or password"
         case .connectionError(let error):
             let nsError = error as NSError
             if nsError.domain == NSURLErrorDomain {

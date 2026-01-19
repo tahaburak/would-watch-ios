@@ -7,6 +7,15 @@
 
 import Foundation
 
+/// Protocol for URLSession-like objects to enable dependency injection and testing
+protocol URLSessionProtocol {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+extension URLSession: URLSessionProtocol {
+    // URLSession already conforms to URLSessionProtocol via its data(for:) method
+}
+
 protocol APIClientProtocol {
     func request<T: Decodable>(
         endpoint: String,
@@ -33,10 +42,10 @@ protocol APIClientProtocol {
 final class APIClient: APIClientProtocol {
     static let shared = APIClient()
 
-    private let session: URLSession
+    private let session: URLSessionProtocol
     private var authToken: String?
 
-    init(session: URLSession = .shared) {
+    init(session: URLSessionProtocol = URLSession.shared) {
         self.session = session
     }
 
@@ -51,6 +60,7 @@ final class APIClient: APIClientProtocol {
         headers: [String: String]? = nil
     ) async throws -> T {
         guard let url = URL(string: AppConfig.backendBaseURL + endpoint) else {
+            print("❌ [APIClient] Invalid URL: \(AppConfig.backendBaseURL + endpoint)")
             throw NetworkError.invalidURL
         }
 
@@ -64,6 +74,9 @@ final class APIClient: APIClientProtocol {
         // Add authorization header if token exists
         if let token = authToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            print("🔐 [APIClient] Request with auth token")
+        } else {
+            print("⚠️ [APIClient] Request without auth token")
         }
 
         // Add custom headers
@@ -71,15 +84,35 @@ final class APIClient: APIClientProtocol {
             request.setValue(value, forHTTPHeaderField: key)
         }
 
+        // Log request
+        print("📤 [APIClient] \(method.rawValue) \(url.absoluteString)")
+        if let body = body, let bodyString = String(data: body, encoding: .utf8) {
+            print("📦 [APIClient] Request body: \(bodyString)")
+        }
+
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await session.data(for: request)
         } catch {
+            print("❌ [APIClient] Connection error: \(error.localizedDescription)")
+            if let nsError = error as NSError? {
+                print("   Domain: \(nsError.domain), Code: \(nsError.code)")
+            }
             throw NetworkError.connectionError(error)
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ [APIClient] Invalid response type")
             throw NetworkError.noData
+        }
+
+        // Log response
+        print("📥 [APIClient] Response: \(httpResponse.statusCode) \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+        if let responseString = String(data: data, encoding: .utf8) {
+            let preview = responseString.count > 500 ? String(responseString.prefix(500)) + "..." : responseString
+            print("📦 [APIClient] Response body: \(preview)")
+        } else {
+            print("📦 [APIClient] Response body: <binary data, \(data.count) bytes>")
         }
 
         switch httpResponse.statusCode {
@@ -87,14 +120,33 @@ final class APIClient: APIClientProtocol {
             do {
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .iso8601
-                return try decoder.decode(T.self, from: data)
+                let result = try decoder.decode(T.self, from: data)
+                print("✅ [APIClient] Successfully decoded response")
+                return result
             } catch {
+                print("❌ [APIClient] Decoding error: \(error)")
+                if let decodingError = error as? DecodingError {
+                    switch decodingError {
+                    case .keyNotFound(let key, let context):
+                        print("   Missing key: \(key.stringValue) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .typeMismatch(let type, let context):
+                        print("   Type mismatch: expected \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .valueNotFound(let type, let context):
+                        print("   Value not found: \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    case .dataCorrupted(let context):
+                        print("   Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)")
+                    @unknown default:
+                        print("   Unknown decoding error")
+                    }
+                }
                 throw NetworkError.decodingError(error)
             }
         case 401:
+            print("❌ [APIClient] Unauthorized (401)")
             throw NetworkError.unauthorized
         default:
             let errorMessage = String(data: data, encoding: .utf8)
+            print("❌ [APIClient] Server error (\(httpResponse.statusCode)): \(errorMessage ?? "No error message")")
             throw NetworkError.serverError(statusCode: httpResponse.statusCode, message: errorMessage)
         }
     }

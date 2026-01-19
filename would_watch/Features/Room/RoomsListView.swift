@@ -101,7 +101,7 @@ struct RoomRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(room.name)
+                Text(room.displayName)
                     .font(AppFonts.bodyLarge)
                     .fontWeight(.semibold)
 

@@ -160,7 +160,7 @@ final class NetworkLayerTests: XCTestCase {
         {
             "id": "room-123",
             "name": "Test Room",
-            "host_id": "user-123",
+            "creator_id": "user-123",
             "status": "active",
             "created_at": "2026-01-19T12:00:00Z",
             "participants": ["user-123", "user-456"]
@@ -181,7 +181,7 @@ final class NetworkLayerTests: XCTestCase {
 
             // Then
             XCTAssertEqual(room.id, "room-123")
-            XCTAssertEqual(room.name, "Test Room")
+            XCTAssertEqual(room.displayName, "Test Room")
             XCTAssertEqual(room.hostId, "user-123")
             XCTAssertEqual(room.status, .active)
         } catch {
@@ -342,31 +342,24 @@ final class NetworkLayerTests: XCTestCase {
 
 // MARK: - URLSession Mock
 
-@MainActor
-final class URLSessionMock: URLSession {
+final class URLSessionMock: URLSessionProtocol {
     var data: Data?
     var response: URLResponse?
     var error: Error?
     var lastRequest: URLRequest?
 
-    nonisolated override init() {
-        super.init()
-    }
-
-    nonisolated override func data(for request: URLRequest, delegate: (any URLSessionTaskDelegate)? = nil) async throws -> (Data, URLResponse) {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         // Store the request
-        await MainActor.run {
-            self.lastRequest = request
-        }
+        lastRequest = request
 
         // Check for error
-        if let error = await MainActor.run(body: { self.error }) {
+        if let error = error {
             throw error
         }
 
         // Get data and response
-        guard let data = await MainActor.run(body: { self.data }),
-              let response = await MainActor.run(body: { self.response }) else {
+        guard let data = data,
+              let response = response else {
             throw NetworkError.noData
         }
 

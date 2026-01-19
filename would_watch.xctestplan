@@ -1,0 +1,49 @@
+{
+  "configurations" : [
+    {
+      "id" : "6EB602BB-F516-4FD7-AF10-4D4300363895",
+      "name" : "Test Scheme Action",
+      "options" : {
+        "maximumTestExecutionTimeAllowance" : {
+
+        },
+        "maximumTestRepetitions" : 1,
+        "testExecutionOrdering" : "random",
+        "targetForVariableExpansion" : {
+          "containerPath" : "container:would_watch.xcodeproj",
+          "identifier" : "67D22E1E2F1C2651001BF04E",
+          "name" : "would_watch"
+        }
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "maximumTestRepetitions" : 1,
+    "testExecutionOrdering" : "random",
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:would_watch.xcodeproj",
+      "identifier" : "67D22E1E2F1C2651001BF04E",
+      "name" : "would_watch"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:would_watch.xcodeproj",
+        "identifier" : "6771C0662F1D50F90024883C",
+        "name" : "would_watchTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:would_watch.xcodeproj",
+        "identifier" : "6771C07F2F1D511F0024883C",
+        "name" : "would_watchUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

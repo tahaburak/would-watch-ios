@@ -30,7 +30,7 @@ struct NetworkSettingsSheet: View {
                         #endif
                 }
                 
-                Section(footer: Text("If you are running on Simulator, use http://127.0.0.1:8080/api\nIf on physical device, use your Mac's LAN IP.")) {
+                Section(footer: Text("Default: https://would.watch/api\nFor local development, use http://127.0.0.1:8080/api (Simulator) or your Mac's LAN IP (physical device).")) {
                     Button("Reset to Default") {
                         AppConfig.customBaseURL = nil
                         isPresented = false

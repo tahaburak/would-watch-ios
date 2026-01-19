@@ -75,7 +75,7 @@ struct RealtimeLobbyView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.blue)
 
-                    Text(room.name)
+                    Text(room.displayName)
                         .font(AppFonts.headlineLarge)
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
@@ -201,7 +201,7 @@ struct RealtimeLobbyView: View {
                     }
 
                     // Share Button
-                    ShareLink(item: URL(string: "wouldwatch://room/\(room.id)")!, message: Text("Join my Would Watch room: \(room.name) - wouldwatch://room/\(room.id)")) {
+                    ShareLink(item: URL(string: "wouldwatch://room/\(room.id)")!, message: Text("Join my Would Watch room: \(room.displayName) - wouldwatch://room/\(room.id)")) {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
                             Text("Share Room")

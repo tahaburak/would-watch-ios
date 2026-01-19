@@ -43,6 +43,10 @@ final class RoomViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        defer {
+            isLoading = false
+        }
+
         do {
             let newRoom = try await roomService.createRoom(name: name, participants: participants)
             rooms.insert(newRoom, at: 0)
@@ -51,8 +55,6 @@ final class RoomViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             return false
         }
-
-        isLoading = false
     }
 
     func joinRoom(_ roomId: String) async {

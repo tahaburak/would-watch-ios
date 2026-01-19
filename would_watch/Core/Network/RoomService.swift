@@ -27,34 +27,35 @@ final class RoomService: RoomServiceProtocol {
         struct Response: Codable {
             let rooms: [Room]
         }
-        let response: Response = try await apiClient.get(endpoint: "/rooms", headers: nil)
+        let response: Response = try await apiClient.get(endpoint: "/api/rooms", headers: nil)
         return response.rooms
     }
 
     func createRoom(name: String, participants: [String]) async throws -> Room {
-        let request = CreateRoomRequest(name: name, participants: participants)
-        let response: CreateRoomResponse = try await apiClient.post(endpoint: "/rooms", body: request, headers: nil)
-        return response.room
+        let request = CreateRoomRequest(name: name, isPublic: false, initialMembers: participants)
+        // Backend returns the room directly, not wrapped in a response object
+        let room: Room = try await apiClient.post(endpoint: "/api/rooms", body: request, headers: nil)
+        return room
     }
 
     func joinRoom(roomId: String) async throws -> Room {
-        return try await apiClient.post(endpoint: "/rooms/\(roomId)/join", body: EmptyBody(), headers: nil)
+        return try await apiClient.post(endpoint: "/api/rooms/\(roomId)/join", body: EmptyBody(), headers: nil)
     }
 
     func getRoom(roomId: String) async throws -> Room {
-        return try await apiClient.get(endpoint: "/rooms/\(roomId)", headers: nil)
+        return try await apiClient.get(endpoint: "/api/rooms/\(roomId)", headers: nil)
     }
 
     func submitVote(roomId: String, mediaId: Int, vote: VoteType) async throws -> VoteResponse {
         let request = VoteRequest(mediaId: mediaId, vote: vote)
-        return try await apiClient.post(endpoint: "/rooms/\(roomId)/vote", body: request, headers: nil)
+        return try await apiClient.post(endpoint: "/api/rooms/\(roomId)/vote", body: request, headers: nil)
     }
 
     func getMatches(roomId: String) async throws -> [RoomMatch] {
         struct Response: Codable {
             let matches: [RoomMatch]
         }
-        let response: Response = try await apiClient.get(endpoint: "/rooms/\(roomId)/matches", headers: nil)
+        let response: Response = try await apiClient.get(endpoint: "/api/rooms/\(roomId)/matches", headers: nil)
         return response.matches
     }
 }
