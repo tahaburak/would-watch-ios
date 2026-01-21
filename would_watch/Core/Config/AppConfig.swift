@@ -38,6 +38,6 @@ enum AppConfig {
         return "https://would.watch/api"
     }()
 
-    static let supabaseURL = "https://gtjokreqhfsydfmtbtvg.supabase.co"
-    static let supabaseAnonKey = "sb_publishable_G-_D63xGxZ9_GED4okXgoQ_pz-Kjn6E"
+    static let supabaseURL = "https://supabase.tahaburak.com"
+    static let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzY4OTQwNjA2LCJleHAiOjIwODQzMDA2MDZ9.aXi8qTySblUCDb4JSz0_3mQp40Z6E6-Qzcjdv2Re5QI"
 }
