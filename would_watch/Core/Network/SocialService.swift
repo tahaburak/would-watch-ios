@@ -25,7 +25,7 @@ final class SocialService: SocialServiceProtocol {
         struct Response: Codable {
             let friends: [Friend]
         }
-        let response: Response = try await apiClient.get(endpoint: "/social/friends", headers: nil)
+        let response: Response = try await apiClient.get(endpoint: "/me/following", headers: nil)
         return response.friends
     }
 
@@ -34,19 +34,20 @@ final class SocialService: SocialServiceProtocol {
             let users: [Friend]
         }
         let response: Response = try await apiClient.get(
-            endpoint: "/social/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)",
+            endpoint: "/users/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)",
             headers: nil
         )
         return response.users
     }
 
     func followUser(userId: String) async throws -> FollowResponse {
-        let request = FollowRequest(userId: userId)
-        return try await apiClient.post(endpoint: "/social/follow", body: request, headers: nil)
+        // Backend expects: POST /api/follows/{userId} (userId in URL, not body)
+        struct EmptyBody: Codable {}
+        return try await apiClient.post(endpoint: "/follows/\(userId)", body: EmptyBody(), headers: nil)
     }
 
     func unfollowUser(userId: String) async throws -> FollowResponse {
-        let request = FollowRequest(userId: userId)
-        return try await apiClient.post(endpoint: "/social/unfollow", body: request, headers: nil)
+        // Backend expects: DELETE /api/follows/{userId} (userId in URL, not body)
+        return try await apiClient.delete(endpoint: "/follows/\(userId)", headers: nil)
     }
 }

@@ -20,12 +20,12 @@ final class ProfileService: ProfileServiceProtocol {
     }
 
     func getProfile() async throws -> UserProfile {
-        return try await apiClient.get(endpoint: "/profile", headers: nil)
+        return try await apiClient.get(endpoint: "/me/profile", headers: nil)
     }
 
     func updateProfile(username: String? = nil, privacy: PrivacySetting? = nil) async throws -> UserProfile {
         let request = UpdateProfileRequest(username: username, privacy: privacy)
-        let response: UpdateProfileResponse = try await apiClient.put(endpoint: "/profile", body: request, headers: nil)
+        let response: UpdateProfileResponse = try await apiClient.put(endpoint: "/me/profile", body: request, headers: nil)
         return response.profile
     }
 }

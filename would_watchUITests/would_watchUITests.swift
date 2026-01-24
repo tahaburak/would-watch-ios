@@ -78,19 +78,31 @@ final class would_watchUITests: XCTestCase {
         // Navigate to Profile tab (where Settings button is)
         XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
         profileTab.tap()
-        
-        // Wait a moment for tab switch animation
-        sleep(1)
-        
-        // Wait for profile screen - check for navigation title or any profile content
+
+        // Wait for profile screen to load - check for multiple indicators
+        // ProfileView shows "Profile" navigation title and loads data asynchronously
         let profileTitle = app.navigationBars["Profile"]
-        let profileContent = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'profile' OR label CONTAINS[c] 'activity'")).firstMatch
-        
-        let profileScreenVisible = profileTitle.waitForExistence(timeout: 5) || profileContent.waitForExistence(timeout: 5)
-        XCTAssertTrue(profileScreenVisible, "Profile screen should appear after tapping Profile tab")
-        
-        // When - Tap settings button
-        let settingsButton = app.buttons["Settings"]
+        let activityText = app.staticTexts["Activity"]
+        let loadingIndicator = app.activityIndicators.firstMatch
+
+        // First, wait for navigation title to appear (should be fast)
+        XCTAssertTrue(profileTitle.waitForExistence(timeout: 10), "Profile navigation title should appear")
+
+        // Wait for content to load - either Activity text appears or loading completes
+        // Give it more time since it loads data from the backend
+        var profileContentLoaded = false
+        for _ in 0..<15 {
+            if activityText.exists || (!loadingIndicator.exists && profileTitle.exists) {
+                profileContentLoaded = true
+                break
+            }
+            sleep(1)
+        }
+        XCTAssertTrue(profileContentLoaded, "Profile content should load (Activity text or finished loading)")
+
+        // When - Tap settings button (gear icon with accessibility identifier)
+        // The button is an icon-only button with accessibilityIdentifier("Settings")
+        let settingsButton = app.buttons.matching(identifier: "Settings").firstMatch
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "Settings button should be visible on Profile screen")
         settingsButton.tap()
 
@@ -224,15 +236,22 @@ final class would_watchUITests: XCTestCase {
         // Given
         app.launch()
 
-        // When
-        let signUpButton = app.buttons["Sign Up"]
-        if signUpButton.exists {
-            signUpButton.tap()
+        // Verify we're on login screen
+        let loginButton = app.buttons["Log In"]
+        XCTAssertTrue(loginButton.waitForExistence(timeout: 5), "Login button should exist initially")
 
-            // Then
-            let signUpTitle = app.navigationBars["Sign Up"]
-            XCTAssertTrue(signUpTitle.waitForExistence(timeout: 3), "Should navigate to Sign Up screen")
-        }
+        // When - Tap the toggle button to switch to sign up mode
+        let toggleButton = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Sign Up'")).firstMatch
+        XCTAssertTrue(toggleButton.waitForExistence(timeout: 3), "Sign up toggle button should exist")
+        toggleButton.tap()
+
+        // Then - The main button should now say "Sign Up" instead of "Log In"
+        let signUpButton = app.buttons["Sign Up"]
+        XCTAssertTrue(signUpButton.waitForExistence(timeout: 3), "Main button should change to 'Sign Up'")
+
+        // And the toggle button should now offer to switch back to login
+        let loginToggleButton = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Log In'")).firstMatch
+        XCTAssertTrue(loginToggleButton.waitForExistence(timeout: 2), "Should show toggle back to login")
     }
 
     // MARK: - Room Creation Flow Tests

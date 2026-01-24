@@ -22,6 +22,9 @@ class MockAPIClient: APIClientProtocol {
     var mockUser: User?
     var mockRooms: [Room] = []
     var mockRoom: Room?
+    var mockFriends: [Friend] = []
+    var mockFollowResponse: FollowResponse?
+    var mockData: Data?
 
     // MARK: - APIClientProtocol Implementation
 
@@ -101,6 +104,22 @@ class MockAPIClient: APIClientProtocol {
             return room as? T
         }
 
+        // Friend array responses (wrapped in response structure)
+        if let typeName = String(reflecting: T.self).components(separatedBy: ".").last,
+           typeName.contains("Response") {
+            // Handle wrapped responses like SocialService.getFriends().Response
+            if let mockData = mockData {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                return try? decoder.decode(T.self, from: mockData)
+            }
+        }
+
+        // FollowResponse
+        if T.self == FollowResponse.self, let followResponse = mockFollowResponse {
+            return followResponse as? T
+        }
+
         return nil
     }
 
@@ -114,5 +133,51 @@ class MockAPIClient: APIClientProtocol {
         mockUser = nil
         mockRooms = []
         mockRoom = nil
+        mockFriends = []
+        mockFollowResponse = nil
+        mockData = nil
+    }
+
+    // MARK: - Test Helper Methods
+
+    /// Set mock response for getFriends endpoint
+    func setMockFriendsResponse(_ friends: [Friend]) throws {
+        struct Response: Codable {
+            let friends: [Friend]
+        }
+        let response = Response(friends: friends)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        mockData = try encoder.encode(response)
+    }
+
+    /// Set mock response for searchUsers endpoint
+    func setMockSearchUsersResponse(_ users: [Friend]) throws {
+        struct Response: Codable {
+            let users: [Friend]
+        }
+        let response = Response(users: users)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        mockData = try encoder.encode(response)
+    }
+
+    /// Create a mock Friend for testing
+    static func createMockFriend(
+        id: String = "friend-1",
+        username: String = "testuser",
+        email: String? = "test@example.com",
+        avatarUrl: String? = nil,
+        isFollowing: Bool = false,
+        createdAt: Date? = Date()
+    ) -> Friend {
+        return Friend(
+            id: id,
+            username: username,
+            email: email,
+            avatarUrl: avatarUrl,
+            isFollowing: isFollowing,
+            createdAt: createdAt
+        )
     }
 }

@@ -43,11 +43,23 @@ final class AuthService: AuthServiceProtocol {
         request.httpBody = try JSONEncoder().encode(body)
         
         let (data, response) = try await session.data(for: request)
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.noData
         }
-        
+
+        // Debug logging - print response for troubleshooting
+        print("🔐 [AuthService] Login response status: \(httpResponse.statusCode)")
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("🔐 [AuthService] Login response body (first 500 chars): \(String(responseString.prefix(500)))")
+        }
+
+        // Parse and log token before validation
+        if httpResponse.statusCode == 200,
+           let tempResponse = try? JSONDecoder().decode(SupabaseAuthResponse.self, from: data) {
+            print("🔐 [AuthService] Received access token (first 100 chars): \(String(tempResponse.accessToken.prefix(100)))...")
+        }
+
         guard (200...299).contains(httpResponse.statusCode) else {
             // For security, don't reveal whether user exists or not
             // Return generic error message for authentication failures
