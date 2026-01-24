@@ -63,7 +63,17 @@ enum PrivacySetting: String, Codable, CaseIterable {
 
 struct UpdateProfileRequest: Codable {
     let username: String?
-    let privacy: PrivacySetting?
+    let invitePreference: String?
+
+    enum CodingKeys: String, CodingKey {
+        case username
+        case invitePreference = "invite_preference"
+    }
+
+    init(username: String?, privacy: PrivacySetting?) {
+        self.username = username
+        self.invitePreference = privacy?.rawValue
+    }
 }
 
 struct UpdateProfileResponse: Codable {

@@ -73,7 +73,7 @@ struct ProfileView: View {
                     )
                     .frame(width: 100, height: 100)
                     .overlay(
-                        Text(profile.username.prefix(1).uppercased())
+                        Text((profile.username ?? profile.email ?? "U").prefix(1).uppercased())
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(.white)
                     )
@@ -81,13 +81,15 @@ struct ProfileView: View {
 
                 // Username
                 VStack(spacing: 8) {
-                    Text(profile.username)
+                    Text(profile.username ?? profile.email ?? "User")
                         .font(AppFonts.headlineMedium)
                         .fontWeight(.bold)
 
-                    Text(profile.email)
-                        .font(AppFonts.bodyMedium)
-                        .foregroundColor(.secondary)
+                    if let email = profile.email {
+                        Text(email)
+                            .font(AppFonts.bodyMedium)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 // Privacy Badge

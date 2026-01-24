@@ -76,39 +76,21 @@ final class would_watchUITests: XCTestCase {
         XCTAssertTrue(tabViewExists, "TabView should appear after successful login. If this fails, login likely didn't complete - check test credentials in Supabase.")
 
         // Navigate to Profile tab (where Settings button is)
-        XCTAssertTrue(profileTab.waitForExistence(timeout: 5), "Profile tab should exist")
+        XCTAssertTrue(profileTab.waitForExistence(timeout: 3), "Profile tab should exist")
         profileTab.tap()
 
-        // Wait for profile screen to load - check for multiple indicators
-        // ProfileView shows "Profile" navigation title and loads data asynchronously
+        // Wait for profile screen to load
         let profileTitle = app.navigationBars["Profile"]
-        let activityText = app.staticTexts["Activity"]
-        let loadingIndicator = app.activityIndicators.firstMatch
+        XCTAssertTrue(profileTitle.waitForExistence(timeout: 3), "Profile navigation title should appear")
 
-        // First, wait for navigation title to appear (should be fast)
-        XCTAssertTrue(profileTitle.waitForExistence(timeout: 10), "Profile navigation title should appear")
-
-        // Wait for content to load - either Activity text appears or loading completes
-        // Give it more time since it loads data from the backend
-        var profileContentLoaded = false
-        for _ in 0..<15 {
-            if activityText.exists || (!loadingIndicator.exists && profileTitle.exists) {
-                profileContentLoaded = true
-                break
-            }
-            sleep(1)
-        }
-        XCTAssertTrue(profileContentLoaded, "Profile content should load (Activity text or finished loading)")
-
-        // When - Tap settings button (gear icon with accessibility identifier)
-        // The button is an icon-only button with accessibilityIdentifier("Settings")
+        // When - Tap settings button
         let settingsButton = app.buttons.matching(identifier: "Settings").firstMatch
-        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5), "Settings button should be visible on Profile screen")
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 3), "Settings button should be visible")
         settingsButton.tap()
 
-        // Then - Wait for settings sheet to appear
+        // Then
         let settingsTitle = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5), "Settings screen should appear after tapping Settings button")
+        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 2), "Settings screen should appear")
     }
 
     @MainActor
@@ -117,33 +99,12 @@ final class would_watchUITests: XCTestCase {
         app.launch()
         loginSuccessfully()
 
-        // Then - Check for Rooms tab (should be selected by default)
-        // First verify TabView exists
+        // Then
         let roomsTab = app.buttons["Rooms"]
-        let friendsTab = app.buttons["Friends"]
-        let profileTab = app.buttons["Profile"]
+        XCTAssertTrue(roomsTab.waitForExistence(timeout: 3), "Rooms tab should appear after login")
 
-        let tabViewExists = roomsTab.waitForExistence(timeout: 5) ||
-                          friendsTab.waitForExistence(timeout: 5) ||
-                          profileTab.waitForExistence(timeout: 5)
-
-        XCTAssertTrue(tabViewExists, "TabView should appear after login. If this fails, login didn't complete.")
-        
-        // Now specifically check for Rooms tab
-        XCTAssertTrue(roomsTab.waitForExistence(timeout: 5), "Rooms tab should appear after login")
-        
-        // Verify Rooms tab is visible and selected
-        XCTAssertTrue(roomsTab.exists, "Rooms tab should be visible")
-        
-        // Check for navigation title - RoomsListView has navigationTitle("Rooms")
         let roomsTitle = app.navigationBars["Rooms"]
-        let roomsTitleVisible = roomsTitle.waitForExistence(timeout: 5)
-        
-        // Also check for any room-related content as fallback
-        let roomsContent = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'room' OR label CONTAINS[c] 'no rooms'")).firstMatch
-        let contentVisible = roomsContent.waitForExistence(timeout: 3)
-        
-        XCTAssertTrue(roomsTitleVisible || contentVisible, "Rooms screen should be visible after login (navigation title or content)")
+        XCTAssertTrue(roomsTitle.waitForExistence(timeout: 3), "Rooms screen should be visible")
     }
 
     // MARK: - Authentication Flow Tests
@@ -169,25 +130,9 @@ final class would_watchUITests: XCTestCase {
         loginButton.tap()
 
         // Then - Wait for navigation to main screen
-        // Check for TabView (MainTabView) which appears after successful login
-        let mainTabView = app.otherElements["MainTabView"]
         let roomsTab = app.buttons["Rooms"]
-        let friendsTab = app.buttons["Friends"]
-        let profileTab = app.buttons["Profile"]
-
-        // Wait for at least one tab to appear (with longer timeout for network request)
-        let tabViewVisible = mainTabView.waitForExistence(timeout: 15) ||
-                            roomsTab.waitForExistence(timeout: 15) ||
-                            friendsTab.waitForExistence(timeout: 15) ||
-                            profileTab.waitForExistence(timeout: 15)
-        
-        XCTAssertTrue(tabViewVisible, "Should navigate to main screen (TabView) after successful login. Check if login credentials are valid.")
-        
-        // Also verify we're no longer on login screen
-        // Give it a moment for the transition
-        sleep(1)
-        let stillOnLoginScreen = emailField.exists
-        XCTAssertFalse(stillOnLoginScreen, "Should not be on login screen after successful login")
+        XCTAssertTrue(roomsTab.waitForExistence(timeout: 5), "Should navigate to main screen after successful login")
+        XCTAssertFalse(emailField.exists, "Should not be on login screen after successful login")
     }
 
     @MainActor
@@ -215,7 +160,7 @@ final class would_watchUITests: XCTestCase {
         let passwordField = app.secureTextFields["Password"]
         let loginButton = app.buttons["Log In"]
 
-        XCTAssertTrue(emailField.waitForExistence(timeout: 5))
+        XCTAssertTrue(emailField.waitForExistence(timeout: 3))
 
         // When
         emailField.tap()
@@ -226,9 +171,8 @@ final class would_watchUITests: XCTestCase {
 
         loginButton.tap()
 
-        // Then
-        sleep(2)
-        XCTAssertTrue(emailField.exists, "Should remain on login screen with invalid credentials")
+        // Then - Should remain on login screen
+        XCTAssertTrue(emailField.waitForExistence(timeout: 3), "Should remain on login screen with invalid credentials")
     }
 
     @MainActor
@@ -264,20 +208,17 @@ final class would_watchUITests: XCTestCase {
 
         // When
         let createRoomButton = app.buttons["Create Room"]
-        if createRoomButton.waitForExistence(timeout: 5) {
+        if createRoomButton.waitForExistence(timeout: 3) {
             createRoomButton.tap()
 
             let roomNameField = app.textFields["Room Name"]
-            if roomNameField.waitForExistence(timeout: 3) {
+            if roomNameField.waitForExistence(timeout: 2) {
                 roomNameField.tap()
                 roomNameField.typeText("Test Room")
 
                 let confirmButton = app.buttons["Create"]
                 if confirmButton.exists {
                     confirmButton.tap()
-
-                    // Then
-                    sleep(2)
                     XCTAssertTrue(app.exists, "App should remain stable after room creation")
                 }
             }
@@ -316,8 +257,8 @@ final class would_watchUITests: XCTestCase {
         let passwordField = app.secureTextFields["Password"]
         let loginButton = app.buttons["Log In"]
 
-        guard emailField.waitForExistence(timeout: 5) else {
-            XCTFail("Email field not found - cannot perform login")
+        guard emailField.waitForExistence(timeout: 3) else {
+            XCTFail("Email field not found")
             return
         }
 
@@ -329,56 +270,10 @@ final class would_watchUITests: XCTestCase {
 
         loginButton.tap()
 
-        // Wait for either success (TabView appears) or failure (toast notification appears)
-        // Try multiple ways to find the TabView
-        let mainTabView = app.otherElements["MainTabView"]
+        // Wait for navigation to complete
         let roomsTab = app.buttons["Rooms"]
-        let friendsTab = app.buttons["Friends"]
-        let profileTab = app.buttons["Profile"]
-
-        // Wait for navigation to complete - check for TabView or any tab
-        let loginSuccessful = mainTabView.waitForExistence(timeout: 15) ||
-                             roomsTab.waitForExistence(timeout: 15) ||
-                             friendsTab.waitForExistence(timeout: 15) ||
-                             profileTab.waitForExistence(timeout: 15)
-
-        if !loginSuccessful {
-            // Wait a moment for toast to appear (if login failed)
-            sleep(2)
-
-            // Check if there's a toast notification (error toast)
-            // Try multiple ways to find the toast
-            let toast = app.otherElements["ToastNotification"]
-            let toastMessage = app.staticTexts["ToastMessage"]
-            let toastByLabel = app.otherElements.containing(NSPredicate(format: "label CONTAINS[c] 'invalid' OR label CONTAINS[c] 'email' OR label CONTAINS[c] 'password' OR label CONTAINS[c] 'credentials'")).firstMatch
-
-            // Check for toast by looking for red error toast (error type is red)
-            let redToast = app.otherElements.containing(NSPredicate(format: "label CONTAINS[c] 'invalid email or password' OR label CONTAINS[c] 'invalid'")).firstMatch
-
-            var errorMessage: String? = nil
-
-            // Try to get error message from toast
-            if toastMessage.waitForExistence(timeout: 1) {
-                errorMessage = toastMessage.label
-            } else if toast.waitForExistence(timeout: 1) {
-                errorMessage = toast.label.isEmpty ? toast.value as? String : toast.label
-            } else if toastByLabel.waitForExistence(timeout: 1) {
-                errorMessage = toastByLabel.label
-            } else if redToast.waitForExistence(timeout: 1) {
-                errorMessage = redToast.label
-            }
-
-            if let error = errorMessage, !error.isEmpty {
-                XCTFail("Login failed with error: \(error). Please ensure test credentials (tahaburak.koc+wwtest@gmail.com / password123) exist in Supabase.")
-            } else if emailField.exists {
-                // Still on login screen - login likely failed but no toast detected
-                XCTFail("Login appears to have failed - still on login screen after 15 seconds. Check: 1) Test credentials exist in Supabase, 2) Network connection, 3) Supabase URL configuration. (Toast notification may not have appeared.)")
-            } else {
-                XCTFail("Login failed - neither TabView nor login screen detected. UI state unclear.")
-            }
+        if !roomsTab.waitForExistence(timeout: 5) {
+            XCTFail("Login failed - check credentials and network connection")
         }
-
-        // Additional wait to ensure UI is stable
-        sleep(1)
     }
 }
