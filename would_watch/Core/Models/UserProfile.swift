@@ -9,19 +9,27 @@ import Foundation
 
 struct UserProfile: Codable {
     let id: String
-    let username: String
-    let email: String
+    let username: String?
+    let email: String?
     let avatarUrl: String?
-    let privacy: PrivacySetting
+    let invitePreference: String?
     let createdAt: Date?
+    let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
         case username
         case email
         case avatarUrl = "avatar_url"
-        case privacy
+        case invitePreference = "invite_preference"
         case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    // Computed property for privacy setting based on invite_preference
+    var privacy: PrivacySetting {
+        guard let preference = invitePreference else { return .friends }
+        return PrivacySetting(rawValue: preference) ?? .friends
     }
 }
 
